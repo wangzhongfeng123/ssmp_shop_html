@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script type="text/javascript" src="./js/jquery-3.3.1.min.js"></script>
+<!-- 引入bootstrap css文件 -->
+<link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+<link href="/bootstrap/css/bootstrap.dropdown.hack.css" rel="stylesheet" />
+<!-- 引入bootstrap js文件(JQuery) -->
+<script src="/bootstrap/js/jquery-3.3.1.min.js"></script>
+<script src="/js/DataTables/js/jquery.dataTables.min.js"></script>
+<script src="/bootstrap/js/bootstrap.min.js"></script>
+<!--bootbox-->
+<script type="text/javascript"  src="./js/bootbox/bootbox.min.js"></script>
+<script type="text/javascript"  src="./js/bootbox/bootbox.locales.min.js"></script>
+<!--引入fileInput-->
+<link href="/js/bootstrap-fileinput/css/fileinput.css" rel="stylesheet" type="text/css">
+<script src="/js/bootstrap-fileinput/js/fileinput.js"></script>
+<!--  validate-->
+<link href="/js/bootstrapvalidator-v0.5.2-0/dist/css/bootstrapValidator.min.css">
+<script src="/js/bootstrapvalidator-v0.5.2-0/dist/js/bootstrapValidator.min.js"></script>
+<body>
+
+<div class="panel panel-primary"  >
+    <div class="panel-heading">订单信息</div>
+    <div class="panel-body">
+       <!-- <div style="margin-bottom:10px">
+        </div>-->
+        <table id="dataTableCart" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>用户</th>
+                    <th>地区</th>
+                    <th>支付方式</th>
+                    <th>商品总数</th>
+                    <th>总钱数</th>
+                    <th>支付状态</th>
+                    <th>创建订单</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+</div>
+</body>
+<script>
+
+    $.ajaxSetup({
+        headers:{
+            'token':sessionStorage.getItem("login_token")
+        },
+        complete:function(a,b,c){
+            var rs=a.responseJSON;
+
+            if(rs.code==1000){
+                alert(rs.message);
+                location.href="login.html"
+            }
+            //debugger
+        }
+    })
+
+    $(function () {
+        initCartTable();
+    })
+    function serch() {
+        initTable.ajax.reload();
+    }
+    var initTable;
+    function initCartTable() {
+            initTable=$("#dataTableCart").DataTable({
+                ajax:{
+                    url:"http://localhost:8085/car/selectCartShow.do",
+                    dataType:"json",
+                    dataSrc:"data",
+                },
+                serverSide:false,
+                language:chineseLanguage,
+                searching: false,
+                ordering:  false,
+                lengthMenu:[2,5,10,15],
+                columns:[
+                    {data:"vipId"},
+                    {data:"areaIds"},
+                    {data:"payType",
+                        "render":function (data) {
+                            return data==1?"到货付款":data==0?"微信支付":""
+                        }
+                    },
+                    {data:"proTypeCount"},
+                    {data:"totalMoney"},
+                    {data:"payStatus"},
+                    {data:"createDate"},
+                    {data:"id",
+                        "render":function (data,type,row) {
+                            var buttonHtml = '';
+
+                            buttonHtml += '<div class="btn-group btn-group-xs">';
+                            buttonHtml += '<button type="button" onclick="showUpdateOrDeleteShopDiv('+data+')" class="btn btn-primary">';
+                            buttonHtml += '<span class="glyphicon glyphicon-pencil"></span>&nbsp;操作';
+                            buttonHtml += '</button>';
+
+
+                            if(row.payStatus==0 || row.payStatus==1){
+                                return  buttonHtml+='<button type="button" onclick="toUpdateIsUpShop('+data+',2)" class="btn btn-danger">'+
+                                    '<span class="glyphicon glyphicon-trash"></span>&nbsp;付款'+
+                                    '</button>'+
+                                    '</div>';
+                            }else{
+                                return  buttonHtml+='<button type="button" disabled onclick="toUpdateIsUpShop('+data+',1)" class="btn btn-danger">'+
+                                    '<span class="glyphicon glyphicon-trash"></span>&nbsp;已付款'+
+                                    '</button>'+
+                                    '</div>';
+                            }
+
+
+                            buttonHtml == '</div>';
+                            return buttonHtml;
+                        }
+                    }
+                ]
+            })
+    }
+    
+    function toUpdateIsUpShop(id) {
+        var orderId = sessionStorage.setItem("orderId",id);
+        location.href="weixin.html";
+    }
+    
+    function showUpdateOrDeleteShopDiv(id) {
+        if (confirm("要对数据进行操作吗？")==true){
+            var count = prompt("请输入你的操作方式，修改支付方式：请输入“1”；删除：请输入“2”")
+            if (count!=null && count != ""){
+                if (count==1){
+                    $.post({
+                        data:{"id":id},
+                        dataType:"json",
+                        url:"http://localhost:8085/car/updateCart1.do",
+                        success:function (re) {
+                            if (re.code==200){
+                                alert("修改成功")
+                                serch();
+                            }
+                        },
+                        error:function () {
+                            alert("删除失败")
+                        }
+                    })
+                }
+                if (count==2){
+                    bootbox.confirm({
+                        title: "删除",
+                        size: "large",
+                        message: "确定删除吗?",
+                        buttons: {
+                            confirm: {
+                                label: "确认"
+                            },
+                            cancel: {
+                                label: "取消",
+                                className: "btn btn-danger"
+                            }
+                        },
+                        callback: function (re) {
+                            if (re) {
+                                $.post({
+                                    data:{"id":id},
+                                    dataType:"json",
+                                    url:"http://localhost:8085/car/deleteCart.do",
+                                    success:function (re) {
+                                        if (re.code==200){
+                                            alert("删除成功")
+                                            serch();
+                                        }
+                                    },
+                                    error:function () {
+                                        alert("删除失败")
+                                    }
+                                })
+                            }
+                        }
+                    })
+                }
+            }
+        }
+    }
+    
+
+    var chineseLanguage = {
+        "sProcessing": "处理中...",
+        "sLengthMenu": "显示 _MENU_ 项结果",
+        "sZeroRecords": "没有匹配结果",
+        "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+        "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+        "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+        "sInfoPostFix": "",
+        "sSearch": "搜索:",
+        "sUrl": "",
+        "sEmptyTable": "表中数据为空",
+        "sLoadingRecords": "载入中...",
+        "sInfoThousands": ",",
+        "oPaginate": {
+            "sFirst": "首页",
+            "sPrevious": "上页",
+            "sNext": "下页",
+            "sLast": "末页"
+        },
+        "oAria": {
+            "sSortAscending": ": 以升序排列此列",
+            "sSortDescending": ": 以降序排列此列"
+        }
+    };
+    
+</script>
+
+
+
+
+</html>

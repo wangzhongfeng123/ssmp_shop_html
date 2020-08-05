@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="./res/static/css/main.css">
+  <link rel="stylesheet" type="text/css" href="./res/layui/css/layui.css">
+  <script type="text/javascript" src="./res/layui/layui.js"></script>
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+</head>
+<body>
+
+  <div class="site-nav-bg">
+    <div class="site-nav w1200">
+      <p class="sn-back-home">
+        <i class="layui-icon layui-icon-home"></i>
+        <a href="#">首页</a>
+      </p>
+      <div class="sn-quick-menu">
+        <div class="login"><a href="cartShow.html">订单管理</a></div>
+        <div class="login"><a href="login.html">登录</a></div>
+        <div class="sp-cart"><a href="shopcart.html">购物车</a><span>2</span></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="header">
+    <div class="headerLayout w1200">
+      <div class="headerCon">
+        <h1 class="mallLogo">
+          <a href="#" title="母婴商城">
+            <img src="./res/static/img/logo.png">
+          </a>
+        </h1>
+        <div class="mallSearch">
+          <form action="" class="layui-form" novalidate>
+            <input type="text" name="title" required  lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入需要的商品">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">
+                <i class="layui-icon layui-icon-search"></i>
+            </button>
+            <input type="hidden" name="" value="">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="content content-nav-base commodity-content">
+    <div class="main-nav">
+      <div class="inner-cont0">
+        <div class="inner-cont1 w1200">
+          <div class="inner-cont2">
+            <a href="commodity.html" class="active">所有商品</a>
+            <a href="buytoday.html">今日团购</a>
+            <a href="information.html">母婴资讯</a>
+            <a href="about.html">关于我们</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="commod-cont-wrap">
+      <div class="commod-cont w1200 layui-clear">
+        <div class="left-nav">
+          <div class="title">所有分类</div>
+          <div class="list-box" id="typeDiv">
+
+
+          </div>
+        </div>
+        <div class="right-cont-wrap">
+          <div class="right-cont">
+            <div class="sort layui-clear">
+              <a class="active" href="javascript:;" event = 'volume'>销量</a>
+              <a href="javascript:;" event = 'price'>价格</a>
+            </div>
+            <div class="prod-number">
+            <span>200个</span>
+          </div>
+            <div class="cont-list layui-clear" id="list-cont">
+
+
+
+
+              <!--<div class="item">
+                <div class="img">
+                  <a href="javascript:;"><img src="./res/static/img/paging_img1.jpg"></a>
+                </div>
+                <div class="text">
+                  <p class="title">森系小清新四件套</p>
+                  <p class="price">
+                    <span class="pri">￥200</span>
+                    <span class="nub">1266付款</span>
+                  </p>
+                </div>
+              </div>-->
+
+
+
+            <!-- 模版引擎导入 -->
+            <!-- <script type="text/html" id="demo">
+              {{# layui.each(d.menu.milk.content,function(index,item){}}    
+                <div class="item">
+                  <div class="img">
+                    <a href="javascript:;"><img src="{{item.img}}"></a>
+                  </div>
+                  <div class="text">
+                    <p class="title"></p>
+                    <p class="price">
+                      <span class="pri">{{item.pri}}</span>
+                      <span class="nub">{{item.nub}}</span>
+                    </p>
+                  </div>
+                </div>
+              {{# }); }}
+            </script> -->
+            <div id="demo0" style="text-align: center;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+<script>
+    $(function () {
+       initProduct();
+        initTypes();
+    });
+
+
+
+    function initTypes() {
+        $.post({
+            url:"http://localhost:8085/type/selectType",
+            dataType:"json",
+            success:function (rs) {
+                //alert(rs);
+                var typeStr=rs.data;
+                var htmls="";
+                //将字符串转为json数组
+                typeArr=JSON.parse(typeStr);
+                console.log(typeArr)
+                //遍历所有的类型
+                for (var i = 0; i <typeArr.length ; i++) {
+                    var type = typeArr[i];
+                    htmls+='<dl>';
+                    if (type.pid==1){
+                        htmls+='<dt>'+type.name+'</dt>'
+                        for (var j = 0; j <typeArr.length ; j++) {
+                            var type1 = typeArr[j];
+                            if (type1.pid==type.typeId){
+                                htmls+=' <dd><a href="commodity.html?typeId='+type1.typeId+'">'+type1.name+'</a></dd>'
+                            }
+                        }
+                    }
+                    htmls+='</dl>';
+                }
+                //将拼好的html  填充到指定的ul中
+                $("#typeDiv").html(htmls);
+            },error:function () {
+                alert("请求分类数据异常");
+            }
+        });
+    }
+
+
+
+  //加载商品信息
+  function initProduct() {
+      //获取类型id
+      var  paramJson=getParma();
+      $.post({
+          url:"http://localhost:8085/shop/selectShopByType",
+          dataType:"json",
+          data:paramJson,
+          success:function (rs) {
+            var  product1 = rs.data;
+            var rs = JSON.parse(product1)
+            var htmls="";
+              for (var i = 0; i < rs.length; i++) {
+                  var product=rs[i];
+                  htmls+="<div class=\"item\"><div class=\"img\"><a href=\"./details.html?shopId="+product.shopId+"\"><img height='280px' width='280px' src=\""+product.photograph+"\"></a></div><div class=\"text\"><p class=\"title\">"+product.shopName+"</p><p class=\"price\"><span class=\"pri\">￥"+product.price+"</span><span class=\"nub\">"+product.id+"付款</span></p></div></div>";
+              }
+              $("#list-cont").html(htmls);
+          },error:function () {
+              alert("请求商品数据异常");
+          }
+      });
+  }
+  //获取参数
+  function getParma() {
+      var obj={};//声明一个json对象
+      //获取路径   www.sdfds？name=adsfsd&age=23&sex=2
+      var url=location.href;
+      var urlParam=url.substr(url.indexOf("?")+1);
+      var paramArr=urlParam.split("&");
+      for (var i = 0; i <paramArr.length ; i++) {
+          var param=paramArr[i];//name=adsfsd
+          var keyp=param.substr(0,param.indexOf("="));
+          obj[keyp]=param.substr(param.indexOf("=")+1);
+      }
+
+      return obj;
+
+
+
+  }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+      支付成功
+</body>
+<script>
+    var test2;
+    $(function () {
+        test2 =  setInterval(returnPage,1000*1);
+    });
+    function returnPage() {
+        if (confirm("是否跳转页面？")==true){
+            var count = prompt("请输入你的数据:跳转登录页面，请输入“1”；跳转购物车，请输入“2”；跳转订单页面，请输入“3”;跳转到订单管理页面，请输入“4”")
+            if (count!=null && count !=""){
+                if(count==1){
+                    location.href="login.html";
+                }else if (count==2){
+                    location.href="shopcart.html";
+                }else if (count==3){
+                    location.href="orderConfirm.html";
+                }else if (count==4){
+                    location.href="cartShow.html";
+                }
+            }
+        }
+        clearInterval(test2);
+    }
+</script>
+</html>

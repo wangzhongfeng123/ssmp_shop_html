@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+<script src="/js/qrcode.min.js"></script>
+<body>
+<center><div ><font color="lime">应付金额：<h1 id="many"></h1></font></div></center>
+<center><div id="qrcode"></div></center>
+<center><div ><font color="lime">支付状态：<h1 id="code"></h1></font></div></center>
+
+
+</body>
+
+<script type="text/javascript">
+    $.ajaxSetup({
+        headers:{
+            'token':sessionStorage.getItem("login_token")
+        },
+        complete:function(a,b,c){
+            var rs=a.responseJSON;
+
+            if(rs.code==1000){
+                alert(rs.message);
+                location.href="login.html"
+            }
+        }
+    })
+    $(function () {
+        showQrcde();
+    })
+    function showQrcde() {
+        var orderId = sessionStorage.getItem("orderId");
+        var totalMoney = sessionStorage.getItem("totalMoney");
+        $.post({
+            data:{"orderId":orderId},
+            dataType:"json",
+            url:"http://localhost:8085/cons/getCode.do",
+            success:function (re) {
+               if (re.code==200){
+                   new QRCode(document.getElementById("qrcode"), re.data.getCodeShow );
+                   // getCodeCode();
+                   setInterval(getCodeCode,1000*5);
+                   $("#many").text(totalMoney)
+               }else if (re.code==600){
+                   alert(re.info)
+               }
+            },
+            error:function () {
+                alert("获取失败")
+            }
+        })
+
+    }
+
+    function getCodeCode() {
+        var orderId = sessionStorage.getItem("orderId");
+        $.post({
+            data:{"orderId":orderId},
+            dataType:"json",
+            url:"http://localhost:8085/cons/getCodeCode.do",
+            success:function (re) {
+                if (re.code==200){
+                    if (re.data==1){
+                        $("#code").text("支付成功")
+                        location.href="success.html";
+                    } else if (re.data==2){
+                        $("#code").text("支付中")
+                    } else if (re.data==3){
+                        $("#code").text("未支付")
+                    } else if (re.data==0){
+                        $("#code").text("支付异常： 请联系客户")
+                    }
+                }
+            },
+            error:function () {
+                alert("异常")
+            }
+        })
+    }
+
+
+
+</script>
+</html>
